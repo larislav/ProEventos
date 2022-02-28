@@ -54,8 +54,7 @@ namespace ProEventos.API
             app.UseHttpsRedirection();
 
             app.UseRouting(); // o controller será retornado baseado em determinada
-                                //rota que você colocar
-
+                                
             app.UseAuthorization();
             app.UseCors(access => access.AllowAnyHeader()
                 .AllowAnyMethod()

@@ -7,8 +7,30 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./eventos.component.scss']
 })
 export class EventosComponent implements OnInit {
+  showImage = true;
+  public eventos: any = [];
+  public eventosFiltrados: any = [];
+  widthImg: number = 150;
+  marginImg: number = 2;
+  private _filtroLista: string = '';
 
-  public eventos: any;
+  public get filtroLista(){
+    return this._filtroLista;
+  }
+
+  public set filtroLista(value: string){
+    this._filtroLista = value;
+    this.eventosFiltrados = this.filtroLista ? this.filtrarEventos(this.filtroLista)
+      : this.eventos;
+  }
+
+  filtrarEventos(filtrarPor: string) : any {
+    filtrarPor = filtrarPor.toLocaleLowerCase();
+    return this.eventos.filter(
+      (evento : any) => evento.tema.toLocaleLowerCase().indexOf(filtrarPor) !== -1
+      || evento.local.toLocaleLowerCase().indexOf(filtrarPor) !== -1
+    );
+  }
 
   constructor(private http: HttpClient) { }
 
@@ -17,10 +39,17 @@ export class EventosComponent implements OnInit {
   ngOnInit(): void {
     this.getEventos()
   }
-  //usar this no ts quando está trabalhando dentro da classe
+
+  alterarImagem(){
+    this.showImage = !this.showImage;
+  }
+
   public getEventos(): void{
     this.http.get('https://localhost:5001/api/eventos').subscribe(
-      response => this.eventos = response,
+      response => {
+        this.eventos = response;
+        this.eventosFiltrados = this.eventos
+      },
       error => console.log(error)
     );
     //requisitar do meu metodo get do http e vou me inscrever nesse observable
