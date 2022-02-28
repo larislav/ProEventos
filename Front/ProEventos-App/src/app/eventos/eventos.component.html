@@ -14,7 +14,7 @@
         <button class="btn btn-outline-light btn-sm navbar-toggler"
           (click)="alterarImagem()"
           data-bs-toggle="collapse" data-bs-target="#imagem">
-          {{!showImage ? 'Exibir' : 'Ocultar'}}
+          {{!exibirImagem ? 'Exibir' : 'Ocultar'}}
         </button>
       </th>
       <th>Id</th>
@@ -29,7 +29,7 @@
   <tbody *ngIf="eventos && eventos.length">
     <tr *ngFor="let evento of eventosFiltrados">
       <td>
-        <img [collapse]="!showImage" src="/assets/{{evento.imagemURL}}" alt="imagem"
+        <img [collapse]="!exibirImagem" src="/assets/{{evento.imagemURL}}" alt="imagem"
         [isAnimated]="true"
         [style.width.px]="widthImg"
         [style.margin.px]="marginImg">

@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./eventos.component.scss']
 })
 export class EventosComponent implements OnInit {
-  showImage = true;
+  exibirImagem = true;
   public eventos: any = [];
   public eventosFiltrados: any = [];
   widthImg: number = 150;
@@ -41,7 +41,7 @@ export class EventosComponent implements OnInit {
   }
 
   alterarImagem(){
-    this.showImage = !this.showImage;
+    this.exibirImagem = !this.exibirImagem;
   }
 
   public getEventos(): void{
