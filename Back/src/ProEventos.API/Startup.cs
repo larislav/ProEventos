@@ -10,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using ProEventos.Persistence.Contexto;
 using ProEventos.Application.Contratos;
 using ProEventos.Persistence.Contratos;
+using System;
 
 namespace ProEventos.API
 {
@@ -34,6 +35,10 @@ namespace ProEventos.API
             .AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling 
             = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
                 
+            //dentro do dominio da minha aplicação, no contexto atual,
+            //dentro desses assemblies da minha aplicação,
+            //ache quem herda de profile
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddScoped<IEventoService, EventoService>();
             services.AddScoped<IGeralPersist, GeralPersist>();
             services.AddScoped<IEventoPersist, EventoPersist>();
