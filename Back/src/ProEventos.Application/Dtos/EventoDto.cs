@@ -8,7 +8,7 @@ namespace ProEventos.Application.Dtos
     {
         public int Id { get; set; }
         public string Local { get; set; }
-        public string DataEvento { get; set; }
+        public DateTime DataEvento { get; set; }
 
         [Required(ErrorMessage = "O campo {0} é obrigatório."),
         // MinLength(3, ErrorMessage = "{0} deve ter no mínimo 3 caracteres."),

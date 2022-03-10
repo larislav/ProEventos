@@ -18,6 +18,7 @@ export class EventoListaComponent implements OnInit {
   public exibirImagem = true;
   public eventos: Evento[] = [];
   public eventosFiltrados: Evento[] = [];
+  public eventoId = 0;
   public widthImg = 150;
   public marginImg = 2;
   private _filtroLista = '';
@@ -51,7 +52,7 @@ export class EventoListaComponent implements OnInit {
   public ngOnInit(): void {
     /* spinner starts on init */
     this.spinner.show();
-    this.getEventos();
+    this.carregarEventos();
 
     // setTimeout(() => {
     //   /** spinner ends after 5 seconds */
@@ -62,7 +63,7 @@ export class EventoListaComponent implements OnInit {
     this.exibirImagem = !this.exibirImagem;
   }
 
-  public getEventos(): void{
+  public carregarEventos(): void{
     this.eventoService.getEvento().subscribe({
       next: (response: Evento[]) => {
         this.eventos = response;
@@ -78,13 +79,27 @@ export class EventoListaComponent implements OnInit {
     //que me retorna 2 itens principalmente: o response, e o complete
   }
 
-  openModal(template: TemplateRef<any>): void {
+  openModal(event: any, template: TemplateRef<any>, eventoId: number): void {
+    event.stopPropagation();
+    this.eventoId = eventoId;
     this.modalRef = this.modalService.show(template, {class: 'modal-sm'});
   }
 
   confirm(): void {
     this.modalRef?.hide();
-    this.toastr.success('O Evento foi deletado com sucesso', 'Deletado');
+    this.spinner.show();
+    this.eventoService.deleteEvento(this.eventoId).subscribe({
+      next:(result: any) =>{
+        if(result.message === 'Deletado'){
+          this.toastr.success('O Evento foi deletado com sucesso', 'Deletado!');
+          this.carregarEventos();
+        }
+      },
+      error:(error: any) =>{
+        this.toastr.error(`Erro ao deletar o evento ${this.eventoId}`, 'Erro!');
+      }
+    }).add(() => this.spinner.hide());
+
   }
 
   decline(): void {
