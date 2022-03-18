@@ -28,9 +28,12 @@ import { ptBrLocale } from 'ngx-bootstrap/locale';
 //ngx
 import { ToastrModule } from 'ngx-toastr';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { NgxCurrencyModule } from 'ngx-currency';
 
 //Serviços
 import { EventoService } from './services/evento.service';
+import { LoteService } from './services/lote.service';
+
 //Pipes
 import { DateTimeFormatPipe } from './helpers/DateTimeFormat.pipe';
 import { EventoDetalheComponent } from './componentes/eventos/evento-detalhe/evento-detalhe.component';
@@ -82,9 +85,13 @@ registerLocaleData(localePT);
     }),
     NgxSpinnerModule,
     BsDatepickerModule.forRoot(),
-    CommonModule
+    CommonModule,
+    NgxCurrencyModule
   ],
-  providers: [EventoService], //terceira forma de declarar os arquivos que podem ser injetados (mais usada)
+  providers: [//terceira forma de declarar os arquivos que podem ser injetados (mais usada)
+    EventoService,
+    LoteService
+  ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
