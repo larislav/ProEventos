@@ -9,6 +9,7 @@ import { BsLocaleService } from 'ngx-bootstrap/datepicker';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-evento-detalhe',
@@ -22,6 +23,8 @@ export class EventoDetalheComponent implements OnInit {
   form!: FormGroup;
   estadoSalvar = 'post';
   loteAtual = {id:0, nome: '', indice: 0};
+  imagemURL = 'assets/upload.png';
+  file: File;
 
   get modoEditar(): boolean{
     return this.estadoSalvar === 'put';
@@ -81,6 +84,9 @@ export class EventoDetalheComponent implements OnInit {
             //this.evento = evento para não apontar para memóriado obj retornado,
             //e sim criar um novo objeto com os valores copiados
             this.form.patchValue(this.evento);
+            if(this.evento.imagemURL !== ''){
+              this.imagemURL = environment.apiURL + 'resources/images/' + this.evento.imagemURL;
+            }
             this.carregarLotes();
           },
           error: (error: any) => {
@@ -122,7 +128,7 @@ export class EventoDetalheComponent implements OnInit {
           Validators.required,
           Validators.max(120000)
         ]],
-        imagemURL:['',Validators.required],
+        imagemURL:[''],
         telefone:['',Validators.required],
         email:['',[
           Validators.required,
@@ -232,6 +238,29 @@ export class EventoDetalheComponent implements OnInit {
     }
     declineDeleteLote():void{
       this.modalRef.hide();
+    }
+
+    onFileChange(ev: any): void{
+      const reader = new FileReader();
+      reader.onload = (event: any) => this.imagemURL = event.target.result;
+      this.file = ev.target.files;
+      reader.readAsDataURL(this.file[0]);
+      this.uploadImagem();
+    }
+
+    uploadImagem(): void{
+      this.spinner.show();
+      this.eventoService.postUpload(this.eventoId, this.file).subscribe({
+        next:() => {
+          //this.carregarEvento();
+         this.router.navigate([`eventos/detalhe/${this.eventoId}`]);
+          this.toastr.success('Imagem atualizada com sucesso', 'Sucesso!');
+        },
+        error:(error: any) => {
+          this.toastr.error('Erro no upload da imagem', 'Erro!');
+          console.log(error);
+        }
+      }).add(() => this.spinner.hide());
     }
 
   }
