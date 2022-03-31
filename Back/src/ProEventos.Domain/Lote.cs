@@ -14,5 +14,5 @@ namespace ProEventos.Domain
         //[ForeignKey("EventosDetalhes")]
         public int EventoId { get; set; }
         public Evento Evento { get; set; }
-    }
+    } 
 }

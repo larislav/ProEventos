@@ -14,6 +14,13 @@ using System;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Microsoft.AspNetCore.Http;
+using System.Text.Json.Serialization;
+using ProEventos.Domain.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Collections.Generic;
 
 namespace ProEventos.API
 {
@@ -34,9 +41,48 @@ namespace ProEventos.API
                 context => context.UseSqlite(Configuration.GetConnectionString("Default"))
 
             ); 
+
+            services.AddIdentityCore<User>(options =>
+                {
+                    options.Password.RequireDigit = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireLowercase = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequiredLength = 4;
+                }
+            )
+            .AddRoles<Role>()
+            .AddRoleManager<RoleManager<Role>>()
+            .AddSignInManager<SignInManager<User>>()
+            .AddRoleValidator<RoleValidator<Role>>()
+            .AddEntityFrameworkStores<ProEventosContext>()
+            .AddDefaultTokenProviders(); // se nao colocar isso, la no momento que criar o update
+            //no AccountService, o reset no token não vai funcionar
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters= new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["TokenKey"])),
+                        //toda vez que criptografar com aquela chave do config, tem que descriptografar com a mesma
+
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                        
+                    };
+                }
+            );
+
             services.AddControllers()
-            .AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling 
+            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+            //configuração para quando retornar os Enums que existem no sistema 
+            //pela API, ele retornar o nome invés do número
+            .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling 
             = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            //Configuração para evitar looping infinito ao mapear
+            //Entidades compostas
                 
             //dentro do dominio da minha aplicação, no contexto atual,
             //dentro desses assemblies da minha aplicação,
@@ -44,14 +90,47 @@ namespace ProEventos.API
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddScoped<IEventoService, EventoService>();
             services.AddScoped<ILoteService, LoteService>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAccountService, AccountService>();
 
             services.AddScoped<IGeralPersist, GeralPersist>();
             services.AddScoped<IEventoPersist, EventoPersist>();
             services.AddScoped<ILotePersist, LotePersist>();
+            services.AddScoped<IUserPersist, UserPersist>();
+
             services.AddCors();
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProEventos.API", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "ProEventos.API", Version = "v1" });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = @"JWT Authorization header usando o Bearer.
+                                   Entre com 'Bearer ' [espaço] então coloque seu token.
+                                   Exemplo: 'Bearer 1234abcdef'",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+
+                });
+                options.AddSecurityRequirement( new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header
+                        },
+
+                        new List<string>()
+                    }
+                });
             });
         }
 
@@ -69,6 +148,7 @@ namespace ProEventos.API
 
             app.UseRouting(); // o controller será retornado baseado em determinada
                                 
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseCors(access => access.AllowAnyHeader()
                 .AllowAnyMethod()

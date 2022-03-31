@@ -10,4 +10,4 @@ namespace ProEventos.Application.Dtos
         public int? PalestranteId { get; set; }
         public PalestranteDto Palestrante { get; set; }
     }
-}
+} 

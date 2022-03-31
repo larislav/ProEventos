@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace ProEventos.Application.Dtos
 {
     public class EventoDto
-    {
+    { 
         public int Id { get; set; }
         public string Local { get; set; }
         public DateTime DataEvento { get; set; }
@@ -36,5 +36,9 @@ namespace ProEventos.Application.Dtos
         public IEnumerable<LoteDto> Lotes { get; set; }
         public IEnumerable<RedeSocialDto> RedesSociais { get; set; }
         public IEnumerable<PalestranteDto> Palestrantes { get; set; }
+
+        public int UserId { get; set; } 
+
+        public UserDto UserDto { get; set; }
     }
 }

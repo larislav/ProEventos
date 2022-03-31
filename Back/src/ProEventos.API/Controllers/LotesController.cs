@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 using ProEventos.Application.Dtos;
 
 namespace ProEventos.API.Controllers
-{
+{ 
     [ApiController]
     [Route("api/[controller]")]
     public class LotesController : ControllerBase

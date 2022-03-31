@@ -8,7 +8,7 @@ using ProEventos.Persistence.Contratos;
 namespace ProEventos.Persistence
 {
     public class LotePersist : ILotePersist
-    {
+    { 
         private readonly ProEventosContext _context;
         public LotePersist(ProEventosContext context)
         {

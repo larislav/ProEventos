@@ -20,7 +20,7 @@ namespace ProEventos.Application
             _lotePersist = lotePersist;
             _geralPersist = geralPersist;
             _mapper = mapper;
-        }
+        } 
         public async Task AddLote(int eventoId, LoteDto model)
         {
             try

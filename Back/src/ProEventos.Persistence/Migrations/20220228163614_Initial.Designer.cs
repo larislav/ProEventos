@@ -12,7 +12,7 @@ namespace ProEventos.Persistence.Migrations
     [DbContext(typeof(ProEventosContext))]
     [Migration("20220228163614_Initial")]
     partial class Initial
-    {
+    { 
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
