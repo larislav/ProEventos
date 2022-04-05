@@ -1,7 +1,7 @@
 //Angular
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http'
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -15,6 +15,7 @@ import { TituloComponent } from './shared/titulo/titulo.component';
 import { ContatosComponent } from './componentes/contatos/contatos.component';
 import { DashboardComponent } from './componentes/dashboard/dashboard.component';
 import { PerfilComponent } from './componentes/user/perfil/perfil.component';
+import { HomeComponent } from './componentes/home/home.component';
 
 //ngx bootstrap
 import { CollapseModule } from 'ngx-bootstrap/collapse';
@@ -33,6 +34,7 @@ import { NgxCurrencyModule } from 'ngx-currency';
 //Serviços
 import { EventoService } from './services/evento.service';
 import { LoteService } from './services/lote.service';
+import { AccountService } from './services/account.service';
 
 //Pipes
 import { DateTimeFormatPipe } from './helpers/DateTimeFormat.pipe';
@@ -46,6 +48,9 @@ defineLocale('pt-br', ptBrLocale);
 
 import { CommonModule, registerLocaleData } from '@angular/common';
 import localePT from '@angular/common/locales/pt';
+
+import { JwtInterceptor } from './interceptors/jwt.interceptor';
+
 registerLocaleData(localePT);
 
 @NgModule({
@@ -63,7 +68,8 @@ registerLocaleData(localePT);
       EventoListaComponent,
       UserComponent,
       LoginComponent,
-      RegistrationComponent
+      RegistrationComponent,
+      HomeComponent
    ],
   imports: [
     BrowserModule,
@@ -90,9 +96,10 @@ registerLocaleData(localePT);
   ],
   providers: [//terceira forma de declarar os arquivos que podem ser injetados (mais usada)
     EventoService,
-    LoteService
+    LoteService,
+    AccountService,
+    {provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true}
   ],
-  bootstrap: [AppComponent],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -41,7 +41,7 @@ namespace ProEventos.Application
             }
         }
 
-        public async Task<UserDto> CreateAccountAsync(UserDto userDto)
+        public async Task<UserUpdateDto> CreateAccountAsync(UserDto userDto)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace ProEventos.Application
                 var result = await _userManager.CreateAsync(user, userDto.Password);
                 if(result.Succeeded)
                 {
-                    var userToReturn = _mapper.Map<UserDto>(user);
+                    var userToReturn = _mapper.Map<UserUpdateDto>(user);
                     return userToReturn;
                 }
                 return null;
@@ -82,16 +82,21 @@ namespace ProEventos.Application
                 var user = await _userPersist.GetUserByUsernameAsync(userUpdateDto.Username);
                 if(user == null) return null;
 
+                userUpdateDto.Id = user.Id;
+
                 _mapper.Map(userUpdateDto, user);
 
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                //Gerado um novo token para não deslogar o usuário após a tualização de senha
-                //Por que tem que gerar esse novo token?
-                //Porque no token tem a senha criptografada, como o usuário trocou de senha
-                //a senha do token vai estar errada, então gera outro ao alterar a senha
-                //pra não deslogar o usuário na proxima validação de token em proxima requisição
-                var result = await _userManager.ResetPasswordAsync(user, token, userUpdateDto.Password);
-                //_userPersist = Repositório. Persistência de dados
+                if(userUpdateDto.Password != null)
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    //Gerado um novo token para não deslogar o usuário após a tualização de senha
+                    //Por que tem que gerar esse novo token?
+                    //Porque no token tem a senha criptografada, como o usuário trocou de senha
+                    //a senha do token vai estar errada, então gera outro ao alterar a senha
+                    //pra não deslogar o usuário na proxima validação de token em proxima requisição
+                    await _userManager.ResetPasswordAsync(user, token, userUpdateDto.Password);
+                    //_userPersist = Repositório. Persistência de dados
+                }
                 _userPersist.Update<User>(user);
 
                 if (await _userPersist.SaveChangesAsync())
