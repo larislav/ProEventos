@@ -1,9 +1,10 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Evento } from '../models/Evento';
-import {take} from 'rxjs/operators';
+import {map, take} from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { PaginatedResult } from '@app/models/Pagination';
 
 @Injectable()
 // @Injectable({
@@ -14,14 +15,30 @@ export class EventoService {
 
   constructor(private http: HttpClient) { }
 
-  public getEvento(): Observable<Evento[]> {
-    return this.http.get<Evento[]>(this.baseURL)
-    .pipe(take(1));
-  }
+  public getEvento(page?: number, itemsPerPage?: number, term?: string): Observable<PaginatedResult<Evento[]>> {
+    const paginatedResult: PaginatedResult<Evento[]> = new PaginatedResult<Evento[]>();
+    let params = new HttpParams;
 
-  public getEventosPorTema(tema: string): Observable<Evento[]> {
-    return this.http.get<Evento[]>(`${this.baseURL}/tema/${tema}`)
-    .pipe(take(1));
+    if(page != null && itemsPerPage != null){
+      params = params.append('pageNumber', page.toString());
+      params = params.append('pageSize', itemsPerPage.toString());
+    }
+
+    if(term != null && term != ''){
+      params =params.append('term', term);
+    }
+
+    return this.http
+    .get<Evento[]>(this.baseURL, {observe: 'response', params})
+    .pipe(take(1),
+    map((response) => {//map = manipula o resultado antes de devolve-lo para quem está se inscrevendo
+                      //no Observable
+      paginatedResult.result = response.body;
+      if(response.headers.has('Pagination')){
+        paginatedResult.pagination = JSON.parse(response.headers.get('Pagination'));
+      }
+      return paginatedResult;
+    }));
   }
 
   public getEventoPorId(id: number): Observable<Evento> {

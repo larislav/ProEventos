@@ -14,6 +14,7 @@ using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using ProEventos.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using ProEventos.Persistence.Models;
 
 namespace ProEventos.API.Controllers
 { 
@@ -36,14 +37,18 @@ namespace ProEventos.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
-        {
+        public async Task<IActionResult> Get([FromQuery]PageParams pageParams)
+        {   //FromQuery: todos os itens do PageParams serão passados via Query (URL)
+            //necessário devido a paginação
+
             //IActionResult permite retornar os status code do http
             try
             {
                 var user = User.GetUserId();
-                var eventos = await _eventoService.ObterTodosEventosAsync(user, true);
+                var eventos = await _eventoService.ObterTodosEventosAsync(user, pageParams, true);
                 if(eventos == null) return NoContent();
+
+                Response.AddPagination(eventos.CurrentPage, eventos.PageSize, eventos.TotalCount, eventos.TotalPages);
 
                 return Ok(eventos);
             }
@@ -73,24 +78,6 @@ namespace ProEventos.API.Controllers
             }
         }
 
-         [HttpGet("tema/{tema}")]
-        public async Task<IActionResult> GetByTema(string tema)
-        {
-            try
-            {
-                var user = User.GetUserId();
-                var eventos = await _eventoService.ObterTodosEventosPorTemaAsync(user, tema, true);
-                if(eventos == null) return NoContent();
-
-                return Ok(eventos);
-            }
-            catch (Exception ex)
-            {
-                return this.StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Erro ao tentar recuperar eventos. Erro: {ex.Message}");
-            }
-        }
-
         [HttpPost]
         public async Task<IActionResult> Post(EventoDto model)
         {
@@ -109,7 +96,7 @@ namespace ProEventos.API.Controllers
             }
         }
 
-        [HttpPost("upload-image/{eventoId}")]
+        [HttpPost("upload-image/{eventoId}")]  
         public async Task<IActionResult> UploadImage(int eventoId)
         {
             try
@@ -194,6 +181,7 @@ namespace ProEventos.API.Controllers
             }
             return imageName;
         }
+
 
         [NonAction]
         public void DeleteImage(string imageName)

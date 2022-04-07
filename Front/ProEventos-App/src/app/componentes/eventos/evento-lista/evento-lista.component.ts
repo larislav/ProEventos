@@ -8,6 +8,9 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { PaginatedResult, Pagination } from '@app/models/Pagination';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-evento-lista',
@@ -18,28 +21,38 @@ export class EventoListaComponent implements OnInit {
   modalRef?: BsModalRef;
   public exibirImagem = true;
   public eventos: Evento[] = [];
-  public eventosFiltrados: Evento[] = [];
   public eventoId = 0;
   public widthImg = 150;
   public marginImg = 2;
-  private _filtroLista = '';
+  public pagination = {} as Pagination;
 
-  public get filtroLista(){
-    return this._filtroLista;
-  }
+  termoBuscaChanged: Subject<string> = new Subject<string>();
 
-  public set filtroLista(value: string){
-    this._filtroLista = value;
-    this.eventosFiltrados = this.filtroLista ? this.filtrarEventos(this.filtroLista)
-      : this.eventos;
-  }
+  public filtrarEventos(evnt: any) : void{
+    if(this.termoBuscaChanged.observers.length == 0){
 
-  public filtrarEventos(filtrarPor: string) : Evento[] {
-    filtrarPor = filtrarPor.toLocaleLowerCase();
-    return this.eventos.filter(
-      (evento : any) => evento.tema.toLocaleLowerCase().indexOf(filtrarPor) !== -1
-      || evento.local.toLocaleLowerCase().indexOf(filtrarPor) !== -1
-    );
+      this.termoBuscaChanged.pipe(debounceTime(1000)).subscribe(
+        filtrarPor => {
+          this.spinner.show();
+          this.eventoService.getEvento(this.pagination.currentPage,
+            this.pagination.itemsPerPage,
+            evnt.value).subscribe({
+              next:(paginatedResult: PaginatedResult<Evento[]>)=>{
+                this.eventos = paginatedResult.result;
+                this.pagination = this.pagination;
+              },
+              error:(error: any)=>{
+                this.spinner.hide();
+                this.toastr.error('Erro ao carregar os eventos', "Erro!");
+              }
+            }).add(()=> this.spinner.hide());
+        }
+      )
+    }
+    this.termoBuscaChanged.next(evnt.value); // vai entrar aqui caso não tenha nada no termoBuscaChanged
+                                  //e vai alterar o termoBuscaChanged para ter pelo menos 1 item
+                                  // e qnd ele tiver 1 item pq vc deu o next dele, ele vai lá no pipe
+                                  //e executa de 1 em 1 segundo
   }
 
   constructor(private eventoService: EventoService,
@@ -52,7 +65,7 @@ export class EventoListaComponent implements OnInit {
   //antes do html ser interpretado
   public ngOnInit(): void {
     /* spinner starts on init */
-    this.spinner.show();
+    this.pagination = {currentPage:1, itemsPerPage: 1, totalItems: 2} as Pagination;
     this.carregarEventos();
 
     // setTimeout(() => {
@@ -71,10 +84,13 @@ export class EventoListaComponent implements OnInit {
   }
 
   public carregarEventos(): void{
-    this.eventoService.getEvento().subscribe({
-      next: (response: Evento[]) => {
-        this.eventos = response;
-        this.eventosFiltrados = this.eventos;
+    this.spinner.show();
+
+    this.eventoService.getEvento(this.pagination.currentPage,
+                                this.pagination.itemsPerPage).subscribe({
+      next: (response: PaginatedResult<Evento[]>) => {
+        this.eventos = response.result;
+        this.pagination = response.pagination;
       },
       error: (error: any) => {
         this.spinner.hide();
@@ -90,6 +106,12 @@ export class EventoListaComponent implements OnInit {
     event.stopPropagation();
     this.eventoId = eventoId;
     this.modalRef = this.modalService.show(template, {class: 'modal-sm'});
+  }
+
+  public pageChanged(event): void{
+    this.pagination.currentPage = event.page;
+
+    this.carregarEventos();
   }
 
   confirm(): void {
@@ -116,5 +138,7 @@ export class EventoListaComponent implements OnInit {
   detalheEvento(id: number): void{
     this.router.navigate([`eventos/detalhe/${id}`]);
   }
+
+
 
 }
