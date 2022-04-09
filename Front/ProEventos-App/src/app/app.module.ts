@@ -26,6 +26,7 @@ import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 import { defineLocale } from 'ngx-bootstrap/chronos';
 import { ptBrLocale } from 'ngx-bootstrap/locale';
 import { PaginationModule } from 'ngx-bootstrap/pagination';
+import { TabsModule } from 'ngx-bootstrap/tabs';
 
 //ngx
 import { ToastrModule } from 'ngx-toastr';
@@ -51,6 +52,13 @@ import { CommonModule, registerLocaleData } from '@angular/common';
 import localePT from '@angular/common/locales/pt';
 
 import { JwtInterceptor } from './interceptors/jwt.interceptor';
+import { PerfilDetalheComponent } from './componentes/user/perfil/perfil-detalhe/perfil-detalhe.component';
+import { PalestranteListaComponent } from './componentes/palestrantes/palestrante-lista/palestrante-lista.component';
+import { PalestranteDetalheComponent } from './componentes/palestrantes/palestrante-detalhe/palestrante-detalhe.component';
+
+import { PalestranteService } from './services/palestrante.service';
+import { RedeSocialService } from './services/redeSocial.service';
+import { RedesSociaisComponent } from './componentes/redesSociais/redesSociais.component';
 
 registerLocaleData(localePT);
 
@@ -59,9 +67,13 @@ registerLocaleData(localePT);
     AppComponent,
     EventosComponent,
       PalestrantesComponent,
+      PalestranteListaComponent,
+      PalestranteDetalheComponent,
       ContatosComponent,
       DashboardComponent,
       PerfilComponent,
+      PerfilDetalheComponent,
+      RedesSociaisComponent,
       NavComponent,
       DateTimeFormatPipe,
       TituloComponent,
@@ -94,12 +106,15 @@ registerLocaleData(localePT);
     BsDatepickerModule.forRoot(),
     CommonModule,
     NgxCurrencyModule,
-    PaginationModule.forRoot()
+    PaginationModule.forRoot(),
+    TabsModule.forRoot()
   ],
   providers: [//terceira forma de declarar os arquivos que podem ser injetados (mais usada)
     EventoService,
     LoteService,
     AccountService,
+    PalestranteService,
+    RedeSocialService,
     {provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true}
   ],
   bootstrap: [AppComponent]

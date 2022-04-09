@@ -6,6 +6,7 @@ import { UserUpdate } from '@app/models/identity/UserUpdate';
 import { AccountService } from '@app/services/account.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-perfil',
@@ -13,94 +14,49 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./perfil.component.scss']
 })
 export class PerfilComponent implements OnInit {
-  userUpdate = {} as UserUpdate;
+  public usuario = {} as UserUpdate;
+  public imagemURL = '';
+  public file: File;
 
-  form!: FormGroup;
-  get f():any{
-    return this.form.controls;
-  }
-  constructor(private formbuilder: FormBuilder,
-              public accountService: AccountService,
-              private router: Router,
+public get isPalestrante(): boolean {
+  return this.usuario.funcao === 'Palestrante';
+}
+
+  constructor(private spinner: NgxSpinnerService,
               private toaster: ToastrService,
-              private spinner: NgxSpinnerService) { }
+              private accountService: AccountService) { }
 
   ngOnInit() {
-    this.validation();
-    this.carregarUsuario();
   }
 
-  private carregarUsuario(): void{
+  public setFormValue(usuario: UserUpdate): void{
+    this.usuario = usuario;
+    if(this.usuario.imagemURL)
+      this.imagemURL = environment.apiURL + `resourcers/perfil/${this.usuario.imagemURL}`;
+    else
+      this.imagemURL = './assets/semImagem.png';
+  }
+
+  onFileChange(ev: any): void{
+    const reader = new FileReader();
+    reader.onload = (event: any) => this.imagemURL = event.target.result;
+    this.file = ev.target.files;
+    reader.readAsDataURL(this.file[0]);
+    this.uploadImagem();
+  }
+
+  private uploadImagem(): void{
     this.spinner.show();
-    this.accountService.getUser().subscribe({
-      next:(userRetorno: UserUpdate) => {
-        console.log(userRetorno);
-        this.userUpdate = userRetorno;
-        this.form.patchValue(this.userUpdate);
-        this.toaster.success('Usuário carregado', 'Sucesso');
+    this.accountService.postUpload(this.file).subscribe({
+      next:()=>{
+        this.toaster.success('Imagem atualizada com sucesso!', "Sucesso");
       },
-      error:(error) => {
+      error:(error: any)=>{
+        this.toaster.error('Erro ao fazer upload de imagem', "Erro");
         console.error(error);
-        this.toaster.error('Usuário não carregado', 'Erro');
-        this.router.navigate(['/dashboard']);
       }
-    }
-    ).add(() => this.spinner.hide());
+    }).add(() => this.spinner.hide());
 
   }
 
-  private validation () : void{
-    const formOptions: AbstractControlOptions = {
-      validators: ValidatorField.MustMatch('password', 'confirmePassword')
-    };
-
-    this.form = this.formbuilder.group({
-      userName: [''],
-      primeiroNome: ['',[Validators.required]],
-      ultimoNome: ['',[Validators.required]],
-      titulo: ['NaoInformado',[Validators.required]],
-      email: ['',
-      [
-        Validators.required,
-        Validators.email
-      ]],
-      phoneNumber: ['',[Validators.required]],
-      funcao: ['NaoInformado',[Validators.required]],
-      descricao: ['',
-      [
-        Validators.required,
-        Validators.maxLength(500)
-      ]],
-      password: ['',
-      [
-        Validators.nullValidator,
-        Validators.minLength(4)
-      ]],
-      confirmePassword: ['',[Validators.nullValidator]]
-
-    }, formOptions)
-  }
-
-  onSubmit():void{
-     this.atualizarUsuario();
-  }
-
-  public atualizarUsuario(){
-    this.userUpdate = { ...this.form.value};
-    this.spinner.show();
-    this.accountService.updateUser(this.userUpdate).subscribe(
-      {
-        next:() => {this.toaster.success('Usuário atualizado!', 'Sucesso')},
-        error:(error) => {
-          this.toaster.error(error.error);
-          console.error(error);
-        }
-      }
-    ).add(() => this.spinner.hide())
-  }
-
-  public resetForm(event: any): void{
-    event.preventDefault();
-    this.form.reset();
-  }
 }

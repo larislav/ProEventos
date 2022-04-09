@@ -10,4 +10,5 @@ export class UserUpdate {
     funcao :string;
     descricao :string;
     token :string;
+    imagemURL: string;
 }

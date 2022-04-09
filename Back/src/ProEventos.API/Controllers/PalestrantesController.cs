@@ -58,7 +58,7 @@ namespace ProEventos.API.Controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet]
         
         public async Task<IActionResult> GetPalestrante()
         {
